@@ -1,4 +1,5 @@
 ﻿using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,11 @@ namespace BotFramework.Bots
     public class BotStateDemo : IBot
     {
         private StateAccessor _StateAccssor;
-        public BotStateDemo(StateAccessor stateAccessor)
+        private readonly Conversations _conversations;
+        public BotStateDemo(StateAccessor stateAccessor, Conversations conversations)
         {
             _StateAccssor = stateAccessor;
+            _conversations = conversations;
         }
 
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = new CancellationToken())
@@ -24,6 +27,36 @@ namespace BotFramework.Bots
 
             if (turnContext.Activity == null || String.IsNullOrEmpty(turnContext.Activity.Text))
                 return;
+
+            var activityType = turnContext.Activity.Type;
+            var conversationReference = (ConversationReference)null;
+
+
+
+            if (activityType == ActivityTypes.Message || activityType == ActivityTypes.ConversationUpdate)
+            {
+                conversationReference = turnContext.Activity.GetConversationReference();
+
+                //_logger.LogTrace("----- ProactiveBot - Get conversation reference - Activity type: {ActivityType} User: \"{User}\" - ConversationReference: {@ConversationReference}", activityType, conversationReference.User.Name, conversationReference);
+
+                if (conversationReference.User.Name != null)
+                {
+                    _conversations.Save(conversationReference);
+                }
+            }
+            else
+            {
+                if (activityType == ActivityTypes.Event)
+                {
+                    // es un evento de afuera
+                    // Falta validar que este mensaje que estoy procesando es de este id de conversacion
+
+                    await turnContext.SendActivityAsync( "Recibimos información: " + turnContext.Activity.Text);
+                    await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
+                    return;
+                }
+
+            }
 
 
             switch (currentState.Order)
@@ -47,9 +80,9 @@ namespace BotFramework.Bots
                     // Voy a buscar datos de la orden a la API
                     string mensaje = await LlamarAPI(turnContext.Activity.Text);
 
-                    await turnContext.SendActivityAsync(mensaje);
-
-                    await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
+                    // Descomentar cuando se quiera probar directamente esperar la respeusta de la API
+                    //await turnContext.SendActivityAsync(mensaje);
+                    //await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
                     break;
                 case QuestionOrder.InProcess:
                     // El número de orden que estoy procesando la obtengo del usuario

@@ -46,6 +46,7 @@ namespace BotFramework
                 serviceBot.CredentialProvider = new ConfigurationCredentialProvider(Configuration);
             });
 
+            services.AddSingleton<Conversations>();
 
             services.AddSingleton<StateAccessor>(obj =>
             {
