@@ -31,28 +31,31 @@ namespace BotFramework.Bots
             var activityType = turnContext.Activity.Type;
             var conversationReference = (ConversationReference)null;
 
+            if(turnContext.Activity.Text.ToUpper() == "CANCELAR")
+            {
+                await turnContext.SendActivityAsync("Consulta cancelada");
+                await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
+                return;
+            }
 
 
             if (activityType == ActivityTypes.Message || activityType == ActivityTypes.ConversationUpdate)
             {
                 conversationReference = turnContext.Activity.GetConversationReference();
 
-                //_logger.LogTrace("----- ProactiveBot - Get conversation reference - Activity type: {ActivityType} User: \"{User}\" - ConversationReference: {@ConversationReference}", activityType, conversationReference.User.Name, conversationReference);
-
-                if (conversationReference.User.Name != null)
-                {
-                    _conversations.Save(conversationReference);
-                }
+                _conversations.Save(conversationReference);
             }
             else
             {
-                if (activityType == ActivityTypes.Event)
+                if (activityType == ActivityTypes.Event) // es un evento de afuera
                 {
-                    // es un evento de afuera
-                    // Falta validar que este mensaje que estoy procesando es de este id de conversacion
+                    // Solo lo proceso si estoy esperando una respuesta
+                    if(currentState.Order == QuestionOrder.InProcess)
+                    {
+                        await turnContext.SendActivityAsync(turnContext.Activity.Text);
+                        await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
+                    }
 
-                    await turnContext.SendActivityAsync( "Recibimos información: " + turnContext.Activity.Text);
-                    await ChangeState(turnContext, currentState, QuestionOrder.WaitForUserInput);
                     return;
                 }
 
@@ -66,7 +69,8 @@ namespace BotFramework.Bots
                     {
                         await turnContext.SendActivityAsync("Ingrese número de orden");
                         await ChangeState(turnContext, currentState, QuestionOrder.WaitForInputNumber);
-                    }else
+                    }
+                    else
                         await turnContext.SendActivityAsync("No entiendo lo que ingresaste");
 
                     break;
@@ -74,11 +78,15 @@ namespace BotFramework.Bots
                     await turnContext.SendActivityAsync("Buscando datos de Orden de compra:" + turnContext.Activity.Text);
                     await ChangeState(turnContext, currentState, QuestionOrder.InProcess);
 
+                    //var messageId = Guid.NewGuid();
+                    currentUser.MessageId = conversationReference.ActivityId;
+
                     // Asigno el número de orden a buscar al usuario actual
-                    await ChangeUserData(turnContext,currentUser, turnContext.Activity.Text);
+                    await ChangeUserData(turnContext, currentUser, turnContext.Activity.Text);
 
                     // Voy a buscar datos de la orden a la API
-                    string mensaje = await LlamarAPI(turnContext.Activity.Text);
+                    // FALTA GENERAR EL ID
+                    string mensaje = await LlamarAPI(turnContext.Activity.Text, currentUser.MessageId);
 
                     // Descomentar cuando se quiera probar directamente esperar la respeusta de la API
                     //await turnContext.SendActivityAsync(mensaje);
@@ -86,7 +94,7 @@ namespace BotFramework.Bots
                     break;
                 case QuestionOrder.InProcess:
                     // El número de orden que estoy procesando la obtengo del usuario
-                    await turnContext.SendActivityAsync("Esperá unos minutos! Nos fuimos a buscar la info de la Orden número:" + currentUser.OrderNumber);
+                    await turnContext.SendActivityAsync(String.Format("Esperá unos minutos!\r\n Nos fuimos a buscar la info de la Orden número:{0}\r\nIngrese cancelar para detener la consulta", currentUser.OrderNumber));
                     break;
                 default:
                     break;
@@ -112,18 +120,18 @@ namespace BotFramework.Bots
 
         }
 
-        private async Task<string> LlamarAPI(string orderNumber)
+        private async Task<string> LlamarAPI(string orderNumber, string messageId)
         {
             // Llamo a api
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    string urlBase = "https://mggfunctionapptest.azurewebsites.net/api/FunctionTest?name=FunctionTest";
-                    //string urlBase = "http://localhost:7071/api/FunctionTest?name=FunctionTest";
+                    //string urlBase = "https://mggfunctionapptest.azurewebsites.net/api/FunctionTest?name=FunctionTest";
+                    string urlBase = "http://localhost:7071/api/FunctionTest?name=FunctionTest";
 
                     //Assuming that the api takes the user message as a query paramater
-                    string RequestURI = urlBase + "&orderNumber=" + orderNumber;
+                    string RequestURI = urlBase + "&orderId=" + orderNumber + "&messageId=" + messageId;
                     HttpResponseMessage responsemMsg = await client.GetAsync(RequestURI);
                     if (responsemMsg.IsSuccessStatusCode)
                     {

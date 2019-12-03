@@ -22,7 +22,8 @@ namespace BotFramework
         public void Save(ConversationReference conversationReference)
         {
             AddOrUpdate(
-                conversationReference.User.Name,
+                //conversationReference.User.Name,
+                conversationReference.ActivityId,
                 conversationReference,
                 (key, oldValue) => conversationReference);
         }

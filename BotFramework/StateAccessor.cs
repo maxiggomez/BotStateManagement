@@ -23,6 +23,7 @@ namespace BotFramework
     public class UserInfo
     {
         public string OrderNumber { get; set; }
+        public String MessageId { get; set; }
     }
 
 

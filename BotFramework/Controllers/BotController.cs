@@ -4,11 +4,14 @@
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.6.2
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BotFramework.Controllers
 {
@@ -41,58 +44,40 @@ namespace BotFramework.Controllers
         [HttpPost("/events/{id}")]
         public async Task<InvokeResponse> Events([FromRoute]string id)
         {
-            string body = null;
+            string body = await new StreamReader(Request.Body).ReadToEndAsync();
 
-            //userName = WebUtility.UrlDecode(userName);
+            var valores = JsonConvert.DeserializeObject<OrdenMessage>(body);
 
-            //using (var reader = new StreamReader(ControllerContext.HttpContext.Request.Body))
-            //{
-            //    // quick and dirty sanitization
-            //    body = (await reader.ReadToEndAsync())
-            //        .Replace("script", "", StringComparison.InvariantCultureIgnoreCase)
-            //        .Replace("href", "", StringComparison.InvariantCultureIgnoreCase);
-            //}
-
-            // _logger.LogTrace("----- BotController - Receiving event: \"{EventName}\" - user: \"{UserName}\" ({Body})", eventName, userName, body);
-
-            // Acá deberiamos buscar por el id que llega en el request que deberia ser el mismo que el de la conversacion
-            var conversation = _conversations.Get("User");
+            var conversation = _conversations.Get(valores.MesssageId);
 
             if (conversation == null)
             {
                 return new InvokeResponse { Status = 404, Body = body };
             }
 
-            await ((BotAdapter)Adapter).ContinueConversationAsync("eqwe", conversation, async (context, token) =>
+            await ((BotAdapter)Adapter).ContinueConversationAsync("botId", conversation, async (context, token) =>
             {
-                context.Activity.Name = "hoal";
-                context.Activity.Text = "Orden 1 - 5000 pesos";
+                context.Activity.Name = "orderRPAResult";
+                context.Activity.Text = String.Format("Resultado recibido para MensajeId:{0}\r\nOrden:{1}\r\nMonto:{2}\r\nEstado:{3}",valores.MesssageId,valores.OrdenId,valores.Total,valores.Estado);
                 context.Activity.Type = "event";
                 context.Activity.RelatesTo = null;
-                context.Activity.Value = body;
-
-                //_logger.LogTrace("----- BotController - Craft event activity: {@Activity}", context.Activity);
+                //context.Activity.Value = body;
 
                 await Bot.OnTurnAsync(context, token);
             },default);
 
             await Adapter.ProcessAsync(Request, Response, Bot);
 
-            //var botAppId = "74e5a522-355b-4266-ad53-6e02fc1fe2d5"; // _configuration["BotWebApiApp:AppId"];
-
-            //await _adapter.ContinueConversationAsync(botAppId, conversation, async (context, token) =>
-            //{
-            //    context.Activity.Name = "nombreEvento";
-            //    context.Activity.RelatesTo = null;
-            //    context.Activity.Value = body;
-
-            //   // _logger.LogTrace("----- BotController - Craft event activity: {@Activity}", context.Activity);
-
-            //    await Bot.OnTurnAsync(context, token);
-            //});
-
             return new InvokeResponse { Status = 200, Body = body };
         }
 
+    }
+
+    public class OrdenMessage
+    {
+        public string OrdenId { get; set; }
+        public string MesssageId { get; set; }
+        public string Total { get; set; }
+        public string Estado { get; set; }
     }
 }
