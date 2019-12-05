@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunctionAppTest", "Function
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueOrderCmd", "QueueOrderCmd\QueueOrderCmd.csproj", "{D5242667-E436-4F37-9C85-4C234E9DEA7B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostInAzureQueueByPost", "PostInAzureQueueByPost\PostInAzureQueueByPost.csproj", "{D951AD4F-3535-4374-8FF2-7A6A4D244AF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{D5242667-E436-4F37-9C85-4C234E9DEA7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5242667-E436-4F37-9C85-4C234E9DEA7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5242667-E436-4F37-9C85-4C234E9DEA7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D951AD4F-3535-4374-8FF2-7A6A4D244AF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D951AD4F-3535-4374-8FF2-7A6A4D244AF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D951AD4F-3535-4374-8FF2-7A6A4D244AF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D951AD4F-3535-4374-8FF2-7A6A4D244AF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
