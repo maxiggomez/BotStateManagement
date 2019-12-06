@@ -14,6 +14,7 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Configuration;
+using BotFramework.Entities;
 
 namespace BotFramework.Controllers
 {
@@ -65,7 +66,7 @@ namespace BotFramework.Controllers
 
             if (conversation == null)
             {
-                return new InvokeResponse { Status = 404, Body = body };
+                return new InvokeResponse { Status = 404, Body = "No se encontro destinatario para el mensaje." };
             }
 
             await SendMessageToBot(valores, conversation);
@@ -78,7 +79,7 @@ namespace BotFramework.Controllers
             await ((BotAdapter)_adapter).ContinueConversationAsync(_appId, conversation, async (context, token) =>
             {
                 context.Activity.Name = "orderRPAResult";
-                context.Activity.Text = String.Format("Resultado recibido para MensajeId:{0}\r\nOrden:{1}\r\nMonto:{2}\r\nEstado:{3}", valores.MesssageId, valores.OrderId, valores.Total, valores.Estado);
+                context.Activity.Text = String.Format("Resultado recibido para MensajeId:{0}\r\nOrden:{1}\r\nEmepresa:{2}\r\nFecha:{3}\r\nSolicitante:{4}\r\nSubtotal:{5}\r\nImpuesto:{6}\r\nTotal:{7}", valores.MesssageId, valores.OrderId, valores.company, valores.date, valores.applicant, valores.SubTotal, valores.Tax, valores.Total);
                 context.Activity.Type = "event";
                 //context.Activity.RelatesTo = null;
                 //context.Activity.Value = body;
@@ -86,19 +87,9 @@ namespace BotFramework.Controllers
                 await Bot.OnTurnAsync(context, token);
             }, default);
 
+        
+
             //await _adapter.ProcessAsync(Request, Response, Bot);
         }
-    }
-
-
-    public class OrderMessage
-    {
-        public string MesssageId { get; set; }
-        public string OrderId { get; set; }
-        public string company { get; set; }
-        public string date { get; set; }
-        public string applicant { get; set; }
-        public string Total { get; set; }
-        public string Estado { get; set; }
     }
 }

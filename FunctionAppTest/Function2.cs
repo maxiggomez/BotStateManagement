@@ -69,10 +69,15 @@ namespace FunctionAppTest
             {
 
                 Dictionary<string, string> dictionary = new Dictionary<string, string>();
-                dictionary.Add("ordenId", orderId);
+                dictionary.Add("orderId", orderId);
                 dictionary.Add("messsageId", messageId);
-                dictionary.Add("total", (int.Parse(orderId)*1000).ToString() );
-                dictionary.Add("estado", "Pendiente");
+                dictionary.Add("company", "Empresa "+ orderId);
+                dictionary.Add("date", DateTime.Now.ToShortDateString() );
+                dictionary.Add("applicant", "Test");
+                dictionary.Add("subtotal", (int.Parse(orderId) * 1000).ToString());
+                dictionary.Add("tax", (int.Parse(orderId) * 10).ToString());
+                dictionary.Add("total", ((int.Parse(orderId)*1000) + (int.Parse(orderId) * 10)).ToString());
+                
 
                 string json = JsonConvert.SerializeObject(dictionary);
                 var requestData = new StringContent(json, Encoding.UTF8, "application/json");
